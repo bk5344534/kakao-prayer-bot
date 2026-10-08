@@ -1,4 +1,4 @@
-```python
+
 import json
 import os
 import requests
@@ -355,4 +355,4 @@ if __name__ == "__main__":
         # GitHub Actions가 실패한 것으로 처리하도록
         # 오류를 다시 발생시킵니다.
         raise
-```
+
