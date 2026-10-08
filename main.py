@@ -217,7 +217,7 @@ def send_kakao_message(
     formatted_text = (
         "[오늘의 기도제목]\n\n"
         f"{message_text}\n\n"
-        "──────────────────────\n"
+        "─────────────────\n"
         "📖 오늘의 말씀/QT 묵상하기\n"
         "아래 버튼을 터치해 주세요!"
     )
