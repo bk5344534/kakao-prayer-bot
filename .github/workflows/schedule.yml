@@ -4,7 +4,7 @@ name: Daily Prayer Alarm
 on:
   schedule:
     # UTC 22:00 = 한국시간(KST) 다음날 오전 7:00
-    - cron: '00 22 * * *'
+    - cron: '00 12 * * *'
 
   # GitHub에서 직접 실행할 수 있도록 설정
   workflow_dispatch:
