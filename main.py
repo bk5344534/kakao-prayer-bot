@@ -70,21 +70,19 @@ def get_next_index(total_count):
     return current_index
 
 # ==========================================
-# 5. 카카오톡 메시지 전송 함수 (시각화 강화)
+# 5. 카카오톡 채널 / 나에게 보내기 대체 발송 (알림 팝업 유도)
 # ==========================================
 def send_kakao_message(access_token, message_text):
+    # 기본 텍스트 템플릿 이용
     url = "https://kapi.kakao.com/v2/api/talk/memo/default/send"
     headers = {"Authorization": f"Bearer {access_token}"}
 
-    QT_URL = "https://mobile.duranno.com/qtlite/bible/"
-
-    # 본문 끝에 버튼으로 시선을 유도하는 문구 추가
     formatted_text = (
-        f" [오늘의 기도제목]\n\n"
+        f"[오늘의 기도제목]\n\n"
         f"{message_text}\n\n"
-        f"─────────────\n"
+        f"──────────────────────\n"
         f"📖 오늘의 말씀/QT 묵상하기\n"
-        f"아래 버튼을 터치해 주세요! 👇"
+        f"아래 버튼을 터치해 주세요!"
     )
 
     payload = {
