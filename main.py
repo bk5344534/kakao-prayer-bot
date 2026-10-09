@@ -12,8 +12,8 @@ REST_API_KEY = os.environ.get("KAKAO_REST_API_KEY")
 # GitHub Secrets에서 가져올 카카오 Refresh Token
 REFRESH_TOKEN = os.environ.get("KAKAO_REFRESH_TOKEN")
 
-# Google Docs (구글 문서) 기도제목 파일 URL (txt 내보내기 형식)
-DRIVE_URL = "https://docs.google.com/document/d/1R5MBPTC-Ec1aby8Toow6Rcxgko6ofjve/export?format=txt"
+# Google Docs (구글 문서) 기도제목 파일 URL (새 주소 적용)
+DRIVE_URL = "https://docs.google.com/document/d/1jyA3_rwx8KS9b2ZEpiSxLhy_qyU0WvoptakcnpWu1xs/export?format=txt"
 
 # 기도제목 순번 저장 파일
 STATUS_FILE = "status.json"
