@@ -12,8 +12,7 @@ REST_API_KEY = os.environ.get("KAKAO_REST_API_KEY")
 # GitHub Secrets에서 가져올 카카오 Refresh Token
 REFRESH_TOKEN = os.environ.get("KAKAO_REFRESH_TOKEN")
 
-# Google Docs (구글 문서) 기도제목 파일 URL
-# Google Docs 파일 ID(1R5MBPTC-Ec1aby8Toow6Rcxgko6ofjve)를 txt 내보내기 형식으로 변경
+# Google Docs (구글 문서) 기도제목 파일 URL (txt 내보내기 형식)
 DRIVE_URL = "https://docs.google.com/document/d/1R5MBPTC-Ec1aby8Toow6Rcxgko6ofjve/export?format=txt"
 
 # 기도제목 순번 저장 파일
@@ -31,7 +30,6 @@ def check_settings():
     """
     GitHub Secrets가 제대로 설정되어 있는지 확인합니다.
     """
-
     if not REST_API_KEY:
         raise Exception(
             "KAKAO_REST_API_KEY가 설정되어 있지 않습니다."
@@ -52,7 +50,6 @@ def refresh_kakao_token():
     GitHub Secrets에 저장된 Refresh Token을 사용하여
     새로운 Access Token을 발급받습니다.
     """
-
     url = "https://kauth.kakao.com/oauth/token"
 
     data = {
@@ -88,16 +85,8 @@ def refresh_kakao_token():
 def get_prayers():
     """
     Google Docs 문서에 저장된 기도제목 텍스트를 가져옵니다.
-
-    기도제목은 다음과 같이 --- 로 구분되어 있다고 가정합니다.
-
-    기도제목 1
-    ---
-    기도제목 2
-    ---
-    기도제목 3
+    --- 구분자로 잘라 배열로 반환합니다.
     """
-
     response = requests.get(DRIVE_URL)
 
     # HTTP 오류가 발생하면 예외 발생
@@ -123,20 +112,16 @@ def get_next_index(total_count):
     status.json에 저장된 현재 순번을 읽고
     이번에 사용할 기도제목 번호를 결정합니다.
     """
-
     current_index = 0
 
     # status.json이 있으면 기존 순번을 읽습니다.
     if os.path.exists(STATUS_FILE):
-
         with open(
             STATUS_FILE,
             "r",
             encoding="utf-8"
         ) as f:
-
             status = json.load(f)
-
             current_index = status.get(
                 "current_index",
                 0
@@ -144,13 +129,10 @@ def get_next_index(total_count):
 
     # 전체 기도제목 개수를 넘으면 처음으로 돌아갑니다.
     if total_count > 0:
-
         next_index = (
             current_index + 1
         ) % total_count
-
     else:
-
         next_index = 0
 
     # 다음 실행을 위한 순번 저장
@@ -159,7 +141,6 @@ def get_next_index(total_count):
         "w",
         encoding="utf-8"
     ) as f:
-
         json.dump(
             {
                 "current_index": next_index
@@ -185,7 +166,6 @@ def send_kakao_message(
     카카오톡 '나와의 채팅'으로
     오늘의 기도제목을 보냅니다.
     """
-
     url = (
         "https://kapi.kakao.com/"
         "v2/api/talk/memo/default/send"
@@ -207,14 +187,11 @@ def send_kakao_message(
     # 카카오톡 메시지 템플릿
     template = {
         "object_type": "text",
-
         "text": formatted_text,
-
         "link": {
             "web_url": QT_URL,
             "mobile_web_url": QT_URL
         },
-
         "button_title": "묵상하기(QT)"
     }
 
@@ -243,7 +220,6 @@ def send_kakao_message(
 if __name__ == "__main__":
 
     try:
-
         print("==============================")
         print("오늘의 기도제목 봇 시작")
         print("==============================")
@@ -251,25 +227,20 @@ if __name__ == "__main__":
         # ----------------------------------
         # 1) GitHub Secrets 확인
         # ----------------------------------
-
         check_settings()
-
         print("GitHub Secrets 확인 완료")
 
         # ----------------------------------
         # 2) 카카오 Access Token 갱신
         # ----------------------------------
-
         access_token = refresh_kakao_token()
 
         # ----------------------------------
         # 3) Google Docs 기도제목 가져오기
         # ----------------------------------
-
         prayers = get_prayers()
 
         if not prayers:
-
             raise Exception(
                 "Google Docs에서 기도제목을 찾을 수 없습니다."
             )
@@ -281,7 +252,6 @@ if __name__ == "__main__":
         # ----------------------------------
         # 4) 오늘 사용할 기도제목 선택
         # ----------------------------------
-
         idx = get_next_index(
             len(prayers)
         )
@@ -294,9 +264,8 @@ if __name__ == "__main__":
         )
 
         # ----------------------------------
-        # 5) 카카오톡으로 보내기
+        # 5) 카카오톡 나와의 채팅으로 보내기
         # ----------------------------------
-
         result = send_kakao_message(
             access_token,
             today_prayer
@@ -305,33 +274,22 @@ if __name__ == "__main__":
         # ----------------------------------
         # 6) 결과 확인
         # ----------------------------------
-
         if result.get("result_code") == 0:
-
             print(
                 f"[{idx + 1}/{len(prayers)}] "
-                "기도제목 발송 성공!"
+                "카카오톡 나와의 채팅으로 발송 성공!"
             )
-
         else:
-
-            print(
-                "카카오톡 발송 결과:"
-            )
-
+            print("카카오톡 발송 결과:")
             print(result)
 
         print("==============================")
         print("오늘의 기도제목 봇 종료")
         print("==============================")
 
-
     except Exception as e:
-
         print("==============================")
         print("오류가 발생했습니다.")
         print("==============================")
-
         print(str(e))
-
         raise
