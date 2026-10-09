@@ -12,8 +12,9 @@ REST_API_KEY = os.environ.get("KAKAO_REST_API_KEY")
 # GitHub Secrets에서 가져올 카카오 Refresh Token
 REFRESH_TOKEN = os.environ.get("KAKAO_REFRESH_TOKEN")
 
-# Google Drive 기도제목 파일
-DRIVE_URL = "https://drive.google.com/uc?export=download&id=1R5MBPTC-Ec1aby8Toow6Rcxgko6ofjve"
+# Google Docs (구글 문서) 기도제목 파일 URL
+# Google Docs 파일 ID(1R5MBPTC-Ec1aby8Toow6Rcxgko6ofjve)를 txt 내보내기 형식으로 변경
+DRIVE_URL = "https://docs.google.com/document/d/1R5MBPTC-Ec1aby8Toow6Rcxgko6ofjve/export?format=txt"
 
 # 기도제목 순번 저장 파일
 STATUS_FILE = "status.json"
@@ -77,22 +78,16 @@ def refresh_kakao_token():
 
     print("카카오 Access Token 갱신 성공")
 
-    # 카카오가 새로운 Refresh Token을 발급하는 경우
-    # 현재 프로그램에서는 GitHub Secrets를 자동으로 수정할 수 없으므로
-    # 일단 로그에 표시하지 않고 Access Token만 사용합니다.
-    #
-    # 일반적으로 Refresh Token은 매번 변경되지 않습니다.
-
     return access_token
 
 
 # ==========================================
-# 4. Google Drive에서 기도제목 가져오기
+# 4. Google Docs에서 기도제목 가져오기
 # ==========================================
 
 def get_prayers():
     """
-    Google Drive에 저장된 기도제목 파일을 가져옵니다.
+    Google Docs 문서에 저장된 기도제목 텍스트를 가져옵니다.
 
     기도제목은 다음과 같이 --- 로 구분되어 있다고 가정합니다.
 
@@ -127,16 +122,6 @@ def get_next_index(total_count):
     """
     status.json에 저장된 현재 순번을 읽고
     이번에 사용할 기도제목 번호를 결정합니다.
-
-    예:
-
-    현재 index = 0
-    → 이번 실행에서 0번 기도제목 사용
-
-    다음 실행
-    → 1번 기도제목 사용
-
-    마지막 기도제목까지 가면 다시 0번으로 돌아갑니다.
     """
 
     current_index = 0
@@ -199,8 +184,6 @@ def send_kakao_message(
     """
     카카오톡 '나와의 채팅'으로
     오늘의 기도제목을 보냅니다.
-
-    QT 버튼도 함께 표시합니다.
     """
 
     url = (
@@ -280,7 +263,7 @@ if __name__ == "__main__":
         access_token = refresh_kakao_token()
 
         # ----------------------------------
-        # 3) Google Drive 기도제목 가져오기
+        # 3) Google Docs 기도제목 가져오기
         # ----------------------------------
 
         prayers = get_prayers()
@@ -288,7 +271,7 @@ if __name__ == "__main__":
         if not prayers:
 
             raise Exception(
-                "Google Drive에서 기도제목을 찾을 수 없습니다."
+                "Google Docs에서 기도제목을 찾을 수 없습니다."
             )
 
         print(
@@ -351,6 +334,4 @@ if __name__ == "__main__":
 
         print(str(e))
 
-        # GitHub Actions가 실패한 것으로 처리하도록
-        # 오류를 다시 발생시킵니다.
         raise
