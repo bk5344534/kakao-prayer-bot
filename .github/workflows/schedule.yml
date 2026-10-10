@@ -8,6 +8,7 @@ on:
   # GitHub에서 직접 실행할 수 있도록 설정
   workflow_dispatch:
 
+
 jobs:
   run-script:
 
@@ -31,6 +32,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+
       # ==========================================
       # 2. Python 설치
       # ==========================================
@@ -39,23 +41,31 @@ jobs:
         with:
           python-version: '3.10'
 
+
       # ==========================================
       # 3. 필요한 라이브러리 설치
       # ==========================================
       - name: Install dependencies
         run: pip install requests
 
-      # ==========================================
-      # 4. 토큰 추출 스크립트 실행 (임시)
-      # ==========================================
-      - name: Run export_tokens.py
-        run: python export_tokens.py
 
       # ==========================================
-      # 5. 추출된 토큰 파일 업로드 (임시)
+      # 4. main.py 실행
       # ==========================================
-      - name: Upload token file
-        uses: actions/upload-artifact@v4
-        with:
-          name: my-token-file
-          path: my_tokens.txt
+      - name: Run main.py
+        run: python main.py
+
+
+      # ==========================================
+      # 5. status.json 변경사항 저장
+      # ==========================================
+      - name: Commit & Push changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+          git add status.json
+
+          git commit -m "Auto-update prayer status [skip ci]" || exit 0
+
+          git push
