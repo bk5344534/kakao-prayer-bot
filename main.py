@@ -195,6 +195,7 @@ def send_kakao_message(
     formatted_text = (
         "[오늘의 기도제목]\n\n"
         f"{message_text}\n\n"
+        "─────────────────\n"
         f"📢 내일은 {next_family_name} 차례입니다. 기도제목 확인해 주세요.\n\n"
         f"✏️ 기도제목 수정하기:\n{EDIT_DOCS_URL}\n"
         "─────────────────\n"
