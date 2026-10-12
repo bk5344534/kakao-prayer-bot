@@ -12,8 +12,11 @@ REST_API_KEY = os.environ.get("KAKAO_REST_API_KEY")
 # GitHub Secrets에서 가져올 카카오 Refresh Token
 REFRESH_TOKEN = os.environ.get("KAKAO_REFRESH_TOKEN")
 
-# Google Docs (구글 문서) 기도제목 파일 URL (새 주소 적용)
+# Google Docs (구글 문서) 기도제목 파일 URL (텍스트 추출용)
 DRIVE_URL = "https://docs.google.com/document/d/1jyA3_rwx8KS9b2ZEpiSxLhy_qyU0WvoptakcnpWu1xs/export?format=txt"
+
+# 기도제목 수정용 단축 링크
+EDIT_DOCS_URL = "https://bit.ly/4rXRHGt"
 
 # 기도제목 순번 저장 파일
 STATUS_FILE = "status.json"
@@ -155,16 +158,29 @@ def get_next_index(total_count):
 
 
 # ==========================================
-# 6. 카카오톡 나와의 채팅으로 메시지 보내기
+# 6. 다음날 가정 이름 추출 함수
+# ==========================================
+
+def get_family_name(prayer_text):
+    """
+    기도제목 텍스트의 첫 번째 줄에서 가정 이름을 추출합니다.
+    """
+    first_line = prayer_text.strip().split("\n")[0].strip()
+    return first_line
+
+
+# ==========================================
+# 7. 카카오톡 나와의 채팅으로 메시지 보내기
 # ==========================================
 
 def send_kakao_message(
     access_token,
-    message_text
+    message_text,
+    next_family_name
 ):
     """
     카카오톡 '나와의 채팅'으로
-    오늘의 기도제목을 보냅니다.
+    오늘의 기도제목, 다음날 가정 안내, 기도제목 수정 링크를 보냅니다.
     """
     url = (
         "https://kapi.kakao.com/"
@@ -179,6 +195,8 @@ def send_kakao_message(
     formatted_text = (
         "[오늘의 기도제목]\n\n"
         f"{message_text}\n\n"
+        f"📢 내일은 {next_family_name} 차례입니다. 기도제목 확인해 주세요.\n\n"
+        f"✏️ 기도제목 수정하기:\n{EDIT_DOCS_URL}\n"
         "─────────────────\n"
         "📖 오늘의 말씀/QT 묵상하기\n"
         "아래 버튼을 터치해 주세요!"
@@ -214,7 +232,7 @@ def send_kakao_message(
 
 
 # ==========================================
-# 7. 메인 실행
+# 8. 메인 실행
 # ==========================================
 
 if __name__ == "__main__":
@@ -250,7 +268,7 @@ if __name__ == "__main__":
         )
 
         # ----------------------------------
-        # 4) 오늘 사용할 기도제목 선택
+        # 4) 오늘 및 내일 기도제목 선택
         # ----------------------------------
         idx = get_next_index(
             len(prayers)
@@ -258,9 +276,18 @@ if __name__ == "__main__":
 
         today_prayer = prayers[idx]
 
+        # 다음날 순번 계산 (마지막 번호 다음은 0번)
+        next_idx = (idx + 1) % len(prayers)
+        next_prayer = prayers[next_idx]
+
+        # 다음날 가정 이름(첫 줄) 추출
+        next_family = get_family_name(next_prayer)
+
         print(
-            f"오늘의 기도제목: "
-            f"{idx + 1}/{len(prayers)}"
+            f"오늘의 기도제목: {idx + 1}/{len(prayers)}"
+        )
+        print(
+            f"내일 차례 가정: {next_family}"
         )
 
         # ----------------------------------
@@ -268,7 +295,8 @@ if __name__ == "__main__":
         # ----------------------------------
         result = send_kakao_message(
             access_token,
-            today_prayer
+            today_prayer,
+            next_family
         )
 
         # ----------------------------------
