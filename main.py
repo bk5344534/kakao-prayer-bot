@@ -16,7 +16,7 @@ REFRESH_TOKEN = os.environ.get("KAKAO_REFRESH_TOKEN")
 DRIVE_URL = "https://docs.google.com/document/d/1jyA3_rwx8KS9b2ZEpiSxLhy_qyU0WvoptakcnpWu1xs/export?format=txt"
 
 # 기도제목 수정용 단축 링크
-EDIT_DOCS_URL = "https://bit.ly/4rXRHGt"
+EDIT_DOCS_URL = "https://docs.google.com/document/d/1jyA3_rwx8KS9b2ZEpiSxLhy_qyU0WvoptakcnpWu1xs/edit?usp=sharing"
 
 # 기도제목 순번 저장 파일
 STATUS_FILE = "status.json"
