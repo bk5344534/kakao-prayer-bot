@@ -197,7 +197,7 @@ def send_kakao_message(
         f"{message_text}\n\n"
         "─────────────────\n"
         f"📢 내일은 {next_family_name} 차례입니다. 기도제목 확인해 주세요.\n"
-        f"✏️ 기도제목 수정하기:\n{EDIT_DOCS_URL}\n"
+        "✏️ 기도제목 수정: 여기를 터치하세요!"
         "─────────────────\n"
         "📖 오늘의 말씀/QT 묵상하기\n"
         "아래 버튼을 터치해 주세요!"
@@ -208,8 +208,8 @@ def send_kakao_message(
         "object_type": "text",
         "text": formatted_text,
         "link": {
-            "web_url": QT_URL,
-            "mobile_web_url": QT_URL
+            "web_url": EDIT_DOCS_URL,
+            "mobile_web_url": EDIT_DOCS_URL
         },
         "button_title": "묵상하기(QT)"
     }
