@@ -191,27 +191,37 @@ def send_kakao_message(
         "Authorization": f"Bearer {access_token}"
     }
 
-    # 카카오톡에 표시할 메시지
+    # 카카오톡에 표시할 메시지 (줄바꿈 \n 수정)
     formatted_text = (
         "[오늘의 기도제목]\n\n"
         f"{message_text}\n\n"
         "─────────────────\n"
         f"📢 내일은 {next_family_name} 차례입니다. 기도제목 확인해 주세요.\n"
-        "✏️ 기도제목 수정: 여기를 터치하세요!"
+        "✏️ 기도제목 수정: 여기를 터치하세요!\n"  # ← \n 추가
         "─────────────────\n"
         "📖 오늘의 말씀/QT 묵상하기\n"
         "아래 버튼을 터치해 주세요!"
     )
 
-    # 카카오톡 메시지 템플릿
+    # 카카오톡 메시지 템플릿 (말풍선: 구글독스 / 버튼: QT사이트 분리)
     template = {
         "object_type": "text",
         "text": formatted_text,
+        # 말풍선 전체 터치 시 이동 (구글 문서)
         "link": {
             "web_url": EDIT_DOCS_URL,
             "mobile_web_url": EDIT_DOCS_URL
         },
-        "button_title": "묵상하기(QT)"
+        # 하단 버튼 터치 시 이동 (QT 사이트)
+        "buttons": [
+            {
+                "title": "묵상하기(QT)",
+                "link": {
+                    "web_url": QT_URL,
+                    "mobile_web_url": QT_URL
+                }
+            }
+        ]
     }
 
     payload = {
@@ -230,7 +240,6 @@ def send_kakao_message(
     response.raise_for_status()
 
     return response.json()
-
 
 # ==========================================
 # 8. 메인 실행
