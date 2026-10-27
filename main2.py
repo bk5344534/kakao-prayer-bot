@@ -260,25 +260,10 @@ def create_template(message_text, next_family_name):
     }
 
 
-def send_kakao_message_to_me(access_token, message_text, next_family_name):
-    """1) 나에게 메시지 보내기"""
-    url = "https://kapi.kakao.com/v2/api/talk/memo/default/send"
-    headers = {"Authorization": f"Bearer {access_token}"}
-    template = create_template(message_text, next_family_name)
-
-    payload = {
-        "template_object": json.dumps(template, ensure_ascii=False)
-    }
-
-    response = requests.post(url, headers=headers, data=payload)
-    response.raise_for_status()
-    return response.json()
-
-
 def send_kakao_message_to_friends(
     access_token, receiver_uuids, message_text, next_family_name
 ):
-    """2) 상대방(친구)에게 메시지 보내기 (최대 5명)"""
+    """상대방(친구)에게 메시지 보내기 (최대 5명)"""
     url = "https://kapi.kakao.com/v1/api/talk/friends/message/default/send"
     headers = {
         "Authorization": f"Bearer {access_token}",
@@ -331,28 +316,18 @@ if __name__ == "__main__":
         print(f"오늘의 기도제목: {idx + 1}/{len(prayers)}")
         print(f"내일 차례 가정: {next_family}")
 
-        # 5) 메시지 전송
-        # 5-1) 나에게 보내기
-        res_me = send_kakao_message_to_me(
-            access_token, today_prayer, next_family
-        )
-        if res_me.get("result_code") == 0:
-            print("1. 나에게 메시지 발송 성공!")
-        else:
-            print(f"1. 나에게 메시지 발송 실패: {res_me}")
-
-        # 5-2) 선택된 상대방(친구)에게 보내기
+        # 5) 선택된 상대방(친구)에게 메시지 전송
         res_friends = send_kakao_message_to_friends(
             access_token, RECEIVER_UUIDS, today_prayer, next_family
         )
         successful_uuids = res_friends.get("successful_receiver_uuids", [])
         if successful_uuids:
             print(
-                f"2. 상대방 메시지 발송 성공! (성공 대상: {TARGET_NAMES}, 인원:"
+                f"상대방 메시지 발송 성공! (성공 대상: {TARGET_NAMES}, 인원:"
                 f" {len(successful_uuids)}명)"
             )
         else:
-            print(f"2. 상대방 메시지 발송 실패: {res_friends}")
+            print(f"상대방 메시지 발송 실패: {res_friends}")
 
         print("==============================")
         print("오늘의 기도제목 봇 종료")
@@ -364,4 +339,3 @@ if __name__ == "__main__":
         print("==============================")
         print(str(e))
         raise
-        
