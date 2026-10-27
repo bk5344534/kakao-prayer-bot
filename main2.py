@@ -1,5 +1,7 @@
+import base64
 import json
 import os
+from nacl import encoding, public
 import requests
 
 # ==========================================
@@ -12,6 +14,10 @@ REST_API_KEY = os.environ.get("KAKAO_REST_API_KEY")
 # GitHub Secrets에서 가져올 카카오 Refresh Token
 REFRESH_TOKEN = os.environ.get("KAKAO_REFRESH_TOKEN")
 
+# GitHub Secrets 자동 업데이트용 환경변수 (PAT 및 Repository 정보)
+GH_PAT = os.environ.get("GH_PAT")
+GITHUB_REPOSITORY = os.environ.get("GITHUB_REPOSITORY")  # 예: "username/repo"
+
 # GitHub Secrets에서 이름:UUID 매핑 정보 가져오기
 RECEIVER_MAP_ENV = os.environ.get("KAKAO_RECEIVER_UUIDS")
 
@@ -22,7 +28,9 @@ if RECEIVER_MAP_ENV:
         RECEIVER_MAP = {}
 else:
     # Secrets가 없을 경우 예시 데이터 (로컬 테스트용)
-    RECEIVER_MAP = {"이지의": "실제_UUID는_GitHub_Secrets에만_안전하게_저장됩니다"}
+    RECEIVER_MAP = {
+        "이지의": "실제_UUID는_GitHub_Secrets에만_안전하게_저장됩니다"
+    }
 
 # ==========================================
 # [ 핵심 ] 메시지를 발송할 수신자 명단 직접 지정
@@ -53,6 +61,7 @@ QT_URL = "https://mobile.duranno.com/qtlite/bible/"
 # 2. 기본 설정 확인
 # ==========================================
 
+
 def check_settings():
     """GitHub Secrets 및 수신자 설정 확인"""
     if not REST_API_KEY:
@@ -63,16 +72,70 @@ def check_settings():
 
     if not RECEIVER_UUIDS:
         raise Exception(
-            f"선택한 발송 대상({TARGET_NAMES})의 UUID를 Secrets에서 찾을 수 없거나 대상이 비어 있습니다."
+            f"선택한 발송 대상({TARGET_NAMES})의 UUID를 Secrets에서 찾을 수"
+            " 없거나 대상이 비어 있습니다."
         )
 
 
 # ==========================================
-# 3. 카카오 Access Token 갱신
+# 3. GitHub Secrets 자동 업데이트 함수 (신규)
 # ==========================================
 
+
+def update_github_secret(secret_name, secret_value):
+    """GitHub API를 사용해 Secrets 값을 자동으로 업데이트합니다."""
+    if not GH_PAT or not GITHUB_REPOSITORY:
+        print(
+            "⚠️ GH_PAT 또는 GITHUB_REPOSITORY가 설정되지 않아 Secrets를 자동"
+            " 업데이트할 수 없습니다."
+        )
+        return
+
+    headers = {
+        "Authorization": f"token {GH_PAT}",
+        "Accept": "application/vnd.github.v3+json",
+    }
+
+    # 1. 저장소의 Public Key 가져오기 (암호화용)
+    key_url = f"https://api.github.com/repos/{GITHUB_REPOSITORY}/actions/secrets/public-key"
+    res = requests.get(key_url, headers=headers)
+    res.raise_for_status()
+    key_data = res.json()
+
+    public_key = key_data["key"]
+    key_id = key_data["key_id"]
+
+    # 2. Secret 값 암호화 (Libsodium / PyNaCl)
+    public_key_obj = public.PublicKey(
+        public_key.encode("utf-8"), encoding.Base64Encoder
+    )
+    sealed_box = public.SealedBox(public_key_obj)
+    encrypted = sealed_box.encrypt(secret_value.encode("utf-8"))
+    encrypted_value = base64.b64encode(encrypted).decode("utf-8")
+
+    # 3. GitHub Secrets 업데이트 요청
+    secret_url = f"https://api.github.com/repos/{GITHUB_REPOSITORY}/actions/secrets/{secret_name}"
+    payload = {"encrypted_value": encrypted_value, "key_id": key_id}
+
+    put_res = requests.put(secret_url, headers=headers, json=payload)
+    if put_res.status_code in [201, 204]:
+        print(f"✅ GitHub Secret '{secret_name}' 자동 갱신 성공!")
+    else:
+        print(
+            f"❌ GitHub Secret 갱신 실패: {put_res.status_code} {put_res.text}"
+        )
+
+
+# ==========================================
+# 4. 카카오 Access Token 갱신 (보완)
+# ==========================================
+
+
 def refresh_kakao_token():
-    """Refresh Token으로 새로운 Access Token 발급"""
+    """Refresh Token으로 새로운 Access Token 발급
+
+    (새로운 Refresh Token이 함께 내려오면 GitHub Secrets를 자동 갱신합니다.)
+    """
     url = "https://kauth.kakao.com/oauth/token"
 
     data = {
@@ -89,6 +152,15 @@ def refresh_kakao_token():
     if "access_token" not in result:
         raise Exception(f"카카오 Access Token 갱신 실패: {result}")
 
+    # 새로운 Refresh Token이 발급되었는지 확인 후 Secrets 업데이트
+    new_refresh_token = result.get("refresh_token")
+    if new_refresh_token and new_refresh_token != REFRESH_TOKEN:
+        print(
+            "🔄 새로운 Kakao Refresh Token 발급됨. GitHub Secrets 업데이트를"
+            " 시도합니다..."
+        )
+        update_github_secret("KAKAO_REFRESH_TOKEN", new_refresh_token)
+
     access_token = result["access_token"]
     print("카카오 Access Token 갱신 성공")
 
@@ -96,8 +168,9 @@ def refresh_kakao_token():
 
 
 # ==========================================
-# 4. Google Docs에서 기도제목 가져오기
+# 5. Google Docs에서 기도제목 가져오기
 # ==========================================
+
 
 def get_prayers():
     """Google Docs에서 기도제목 텍스트 가져오기"""
@@ -113,8 +186,9 @@ def get_prayers():
 
 
 # ==========================================
-# 5. 기도제목 순서(Index) 관리
+# 6. 기도제목 순서(Index) 관리
 # ==========================================
+
 
 def get_next_index(total_count):
     """현재 순번 읽기 및 다음 순번 저장"""
@@ -142,8 +216,9 @@ def get_next_index(total_count):
 
 
 # ==========================================
-# 6. 다음날 가정 이름 추출
+# 7. 다음날 가정 이름 추출
 # ==========================================
+
 
 def get_family_name(prayer_text):
     """첫 번째 줄에서 가정 이름 추출"""
@@ -152,8 +227,9 @@ def get_family_name(prayer_text):
 
 
 # ==========================================
-# 7. 카카오톡 메시지 전송 함수
+# 8. 카카오톡 메시지 전송 함수
 # ==========================================
+
 
 def create_template(message_text, next_family_name):
     """공통 메시지 템플릿 생성"""
@@ -221,7 +297,7 @@ def send_kakao_message_to_friends(
 
 
 # ==========================================
-# 8. 메인 실행
+# 9. 메인 실행
 # ==========================================
 
 if __name__ == "__main__":
@@ -234,7 +310,7 @@ if __name__ == "__main__":
         check_settings()
         print(f"선택된 발송 대상자: {TARGET_NAMES}")
 
-        # 2) Access Token 갱신
+        # 2) Access Token 갱신 (필요시 Refresh Token 자동 업데이트)
         access_token = refresh_kakao_token()
 
         # 3) Google Docs 기도제목 가져오기
@@ -272,7 +348,8 @@ if __name__ == "__main__":
         successful_uuids = res_friends.get("successful_receiver_uuids", [])
         if successful_uuids:
             print(
-                f"2. 상대방 메시지 발송 성공! (성공 대상: {TARGET_NAMES}, 인원: {len(successful_uuids)}명)"
+                f"2. 상대방 메시지 발송 성공! (성공 대상: {TARGET_NAMES}, 인원:"
+                f" {len(successful_uuids)}명)"
             )
         else:
             print(f"2. 상대방 메시지 발송 실패: {res_friends}")
@@ -287,3 +364,4 @@ if __name__ == "__main__":
         print("==============================")
         print(str(e))
         raise
+        
