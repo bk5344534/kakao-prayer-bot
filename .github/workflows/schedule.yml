@@ -3,9 +3,9 @@ name: Daily Prayer Alarm
 on:
   schedule:
     # UTC 22:00 = 한국시간(KST) 다음날 오전 7:00
-    - cron: '55 21 * * *'
+    - cron: '50 21 * * *'
     # 월~토 오전 7시에 수신할 경우 아래 코드로 변경
-    #- cron: '55 21 * * 0-5'
+    #- cron: '50 21 * * 0-5'
 
   # GitHub에서 직접 실행할 수 있도록 설정
   workflow_dispatch:
@@ -26,7 +26,7 @@ jobs:
       KAKAO_REST_API_KEY: ${{ secrets.KAKAO_REST_API_KEY }}
       KAKAO_REFRESH_TOKEN: ${{ secrets.KAKAO_REFRESH_TOKEN }}
       # main2(상대방에게 발송) 실행할 경우 아래 내용 주석 해제
-      # KAKAO_RECEIVER_UUIDS: ${{ secrets.KAKAO_RECEIVER_UUIDS }}
+      KAKAO_RECEIVER_UUIDS: ${{ secrets.KAKAO_RECEIVER_UUIDS }}
       
       # [추가 1] GitHub Secrets 자동 갱신용 변수
       GH_PAT: ${{ secrets.GH_PAT }}
@@ -60,8 +60,8 @@ jobs:
       # ==========================================
       # 4. main.py 실행 - 상대방에게 발송할 경우 main2로 변경
       # ==========================================
-      - name: Run main.py
-        run: python main.py
+      - name: Run main2.py
+        run: python main2.py
 
 
       # ==========================================
