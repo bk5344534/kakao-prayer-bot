@@ -23,6 +23,8 @@ jobs:
     env:
       KAKAO_REST_API_KEY: ${{ secrets.KAKAO_REST_API_KEY }}
       KAKAO_REFRESH_TOKEN: ${{ secrets.KAKAO_REFRESH_TOKEN }}
+      # main2(상대방에게 발송) 실행할 경우 아래 내용 실행
+      # KAKAO_RECEIVER_UUIDS: ${{ secrets.KAKAO_RECEIVER_UUIDS }}
 
     steps:
 
@@ -50,7 +52,7 @@ jobs:
 
 
       # ==========================================
-      # 4. main.py 실행
+      # 4. main.py 실행 - 상대방에게 발송할 경우 main2로 변경
       # ==========================================
       - name: Run main.py
         run: python main.py
