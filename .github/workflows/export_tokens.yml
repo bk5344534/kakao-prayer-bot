@@ -1,0 +1,24 @@
+name: Export Kakao Tokens
+
+on:
+  workflow_dispatch: # 웹에서 수동 실행
+
+jobs:
+  export-token:
+    runs-on: ubuntu-latest
+
+    env:
+      KAKAO_REST_API_KEY: ${{ secrets.KAKAO_REST_API_KEY }}
+      KAKAO_REFRESH_TOKEN: ${{ secrets.KAKAO_REFRESH_TOKEN }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Run export_tokens.py
+        run: python export_tokens.py
